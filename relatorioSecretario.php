@@ -12,18 +12,13 @@
         exit();
     }
 
-    $email = $_SESSION['email'];
-    $sql = "SELECT * FROM t_usuario WHERE email = '$email'";
-    $result = mysqli_query($conexao, $sql);
-    $row = mysqli_fetch_assoc($result);
-    $nome = $row['nome'];
-
     date_default_timezone_set('America/Sao_Paulo');
     $currentDate = date('Y-m-d H:i:s');
 
-    $sql = "SELECT t_reserva.*, t_laboratorio.nome AS nome FROM t_reserva
+    $sql = "SELECT t_reserva.*, t_laboratorio.nome_laboratorio AS nome_laboratorio, t_usuario.nome_usuario AS nome_usuario FROM t_reserva
+            INNER JOIN t_usuario ON t_reserva.t_usuario_cpf = t_usuario.cpf
             INNER JOIN t_laboratorio ON t_reserva.t_laboratorio_id_laboratorio = t_laboratorio.id_laboratorio
-            WHERE t_reserva.horario_de_entrega > '$currentDate'
+            WHERE t_reserva.horario_de_entrega > '$currentDate' AND t_reserva.horario_de_reserva < '$currentDate'
             ORDER BY t_reserva.horario_de_entrega ASC";
     $result = mysqli_query($conexao, $sql);
 
@@ -81,49 +76,48 @@
         </div>
         <div class="content d-flex flex-column align-items-center justify-content-center">
         <div class="p-5 bg-white rounded shadow-lg">
-            <?php if (mysqli_num_rows($result) > 0) : ?>
-                <table class="table table-striped">
-                    <thead>
+        <?php if (mysqli_num_rows($result) > 0) : ?>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Laboratório</th>
+                        <th>Usuário</th>
+                        <th>Reserva</th>
+                        <th>Entrega</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php while ($row = mysqli_fetch_assoc($result)) : ?>
+                        <?php date_default_timezone_set('America/Sao_Paulo'); ?>
                         <tr>
-                            <th>Laboratório</th>
-                            <th>Usuário</th>
-                            <th>Reserva</th>
-                            <th>Entrega</th>
-                            <th>Ação</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($row = mysqli_fetch_assoc($result)) : ?>
-                            <?php date_default_timezone_set('America/Sao_Paulo'); ?>
-                            <tr>
-                                <td><?php echo $row['nome']; ?></td>
-                                <td><?php echo $nome; ?></td>
-                                <td><?php echo $row['horario_de_reserva']; ?></td>
-                                <td><?php echo $row['horario_de_entrega']; ?></td>
-                                <td>
-                                    <?php if ($row['horario_de_reserva'] > date('Y-m-d H:i:s')) : ?>
-                                        <div class="d-flex">
-                                            <button type="button" class="btn btn-secondary me-2" disabled>Pendente</button>
-                                            <form action="relatorioSecretario.php" method="POST">
-                                                <input type="hidden" name="reservaId" value="<?php echo $row['idT_reserva']; ?>">
-                                                <button type="submit" name="excluir" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta reserva?')">Excluir</button>
-                                            </form>
-                                        </div>
-                                    <?php else : ?>
+                            <td><?php echo $row['nome_laboratorio']; ?></td>
+                            <td><?php echo $row['nome_usuario']; ?></td>
+                            <td><?php echo $row['horario_de_reserva']; ?></td>
+                            <td><?php echo $row['horario_de_entrega']; ?></td>
+                            <td>
+                                <?php if ($row['horario_de_reserva'] > date('Y-m-d H:i:s')) : ?>
+                                    <div class="d-flex">
+                                        <button type="button" class="btn btn-secondary me-2" disabled>Pendente</button>
                                         <form action="relatorioSecretario.php" method="POST">
                                             <input type="hidden" name="reservaId" value="<?php echo $row['idT_reserva']; ?>">
-                                            <button type="submit" name="recebido" class="btn btn-primary">Receber</button>
+                                            <button type="submit" name="excluir" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja excluir esta reserva?')">Excluir</button>
                                         </form>
-                                    <?php endif; ?>
-                                </td>
-                            </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                <?php else : ?>
-                    <p>Nenhum dado disponível.</p>
-                <?php endif; ?>
-            </div>
+                                    </div>
+                                <?php else : ?>
+                                    <form action="relatorioSecretario.php" method="POST">
+                                        <input type="hidden" name="reservaId" value="<?php echo $row['idT_reserva']; ?>">
+                                        <button type="submit" name="recebido" class="btn btn-primary">Receber</button>
+                                    </form>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endwhile; ?>
+                </tbody>
+            </table>
+            <?php else : ?>
+                <p>Nenhum dado disponível.</p>
+            <?php endif; ?>
         </div>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>

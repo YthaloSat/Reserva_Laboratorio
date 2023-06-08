@@ -12,19 +12,17 @@
         exit();
     }
 
-    $email = $_SESSION['email'];
-    $sql = "SELECT * FROM t_usuario WHERE email = '$email'";
     $result = mysqli_query($conexao, $sql);
     $row = mysqli_fetch_assoc($result);
-    $nome = $row['nome'];
 
     date_default_timezone_set('America/Sao_Paulo');
     $currentDate = date('Y-m-d H:i:s');
 
-    $sql = "SELECT t_reserva.*, t_laboratorio.nome AS nome FROM t_reserva
-            INNER JOIN t_laboratorio ON t_reserva.t_laboratorio_id_laboratorio = t_laboratorio.id_laboratorio
-            WHERE t_reserva.horario_de_entrega < '$currentDate'
-            ORDER BY t_reserva.horario_de_entrega ASC";
+    $sql = "SELECT t_reserva.*, t_laboratorio.nome_laboratorio AS nome_laboratorio, t_usuario.nome_usuario AS nome_usuario FROM t_reserva
+    INNER JOIN t_usuario ON t_reserva.t_usuario_cpf = t_usuario.cpf
+    INNER JOIN t_laboratorio ON t_reserva.t_laboratorio_id_laboratorio = t_laboratorio.id_laboratorio
+    WHERE t_reserva.horario_de_entrega < '$currentDate'
+    ORDER BY t_reserva.horario_de_entrega ASC;";
     $result = mysqli_query($conexao, $sql);
 ?>
 
@@ -70,8 +68,8 @@
                         <tbody>
                             <?php while ($row = mysqli_fetch_assoc($result)) : ?>
                                 <tr>
-                                    <td><?php echo $row['nome']; ?></td>
-                                    <td><?php echo $nome; ?></td>
+                                    <td><?php echo $row['nome_laboratorio']; ?></td>
+                                    <td><?php echo $row['nome_usuario']; ?></td>
                                     <td><?php echo $row['horario_de_reserva']; ?></td>
                                     <td><?php echo $row['horario_de_entrega']; ?></td>
                                 </tr>

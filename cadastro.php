@@ -9,24 +9,19 @@
       $cpf = $_POST['cpf'];
       $tipo_usuario = intval($_POST['T_userType_id_userType']);
 
-      // Verifica se o CPF já existe no banco de dados
       $sql = "SELECT cpf FROM t_usuario WHERE cpf = '$cpf'";
       $result = mysqli_query($conexao, $sql);
 
       if (mysqli_num_rows($result) > 0) {
-          // CPF já existe, exibe mensagem de erro
           $error_message = "CPF já cadastrado. Por favor, insira um CPF válido.";
       } else {
-          // Verifica se o email já existe no banco de dados
           $sql = "SELECT email FROM t_usuario WHERE email = '$email'";
           $result = mysqli_query($conexao, $sql);
 
           if (mysqli_num_rows($result) > 0) {
-              // Email já existe, exibe mensagem de erro
               $error_message = "Email já cadastrado. Por favor, insira um email válido.";
           } else {
-            // Insere os dados do novo usuário no banco de dados
-              $sql = "INSERT INTO t_usuario(nome, email, cpf, senha, T_userType_id_userType) 
+              $sql = "INSERT INTO t_usuario(nome_usuario, email, cpf, senha, T_userType_id_userType) 
               VALUES ('$nome', '$email', '$cpf', '$senha', '$tipo_usuario');";
               $result = mysqli_query($conexao, $sql);
 

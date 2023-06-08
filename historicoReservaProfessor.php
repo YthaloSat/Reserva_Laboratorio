@@ -19,7 +19,7 @@
     $cpf = $row['cpf'];
     $nome = $row['nome'];
 
-    $sql = "SELECT t_reserva.*, t_laboratorio.nome AS nome FROM t_reserva
+    $sql = "SELECT t_reserva.*, t_laboratorio.nome_laboratorio AS nome_laboratorio FROM t_reserva
         INNER JOIN t_laboratorio ON t_reserva.t_laboratorio_id_laboratorio = t_laboratorio.id_laboratorio
         WHERE t_reserva.t_usuario_cpf = '$cpf'
         ORDER BY t_reserva.horario_de_entrega DESC";
@@ -69,7 +69,7 @@
                             <?php while ($row = mysqli_fetch_assoc($result)) : ?>
                                 <?php date_default_timezone_set('America/Sao_Paulo'); ?>
                                     <tr>
-                                    <td><?php echo $row['nome']; ?></td>
+                                    <td><?php echo $row['nome_laboratorio']; ?></td>
                                     <td><?php echo $nome; ?></td>
                                     <td><?php echo $row['horario_de_reserva']; ?></td>
                                     <td><?php echo $row['horario_de_entrega']; ?></td>

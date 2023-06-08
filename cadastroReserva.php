@@ -22,7 +22,10 @@
         $horario_de_reserva = date('Y-m-d H:i:s', strtotime($_POST['horario_de_reserva']));
         $horario_de_entrega = date('Y-m-d H:i:s', strtotime($_POST['horario_de_entrega']));
 
-        $sql_check = "SELECT * FROM t_reserva WHERE t_laboratorio_id_laboratorio = '$id_laboratorio' AND horario_de_entrega > '$horario_de_reserva'";
+        // Alterar a verificação para consulta....
+
+        $sql_check = "SELECT * FROM t_reserva WHERE t_laboratorio_id_laboratorio = '$id_laboratorio' AND 
+                    (horario_de_entrega <= '$horario_de_reserva' OR horario_de_reserva >= '$horario_de_entrega')";
         $result_check = mysqli_query($conexao, $sql_check);
 
         if (mysqli_num_rows($result_check) > 0) {
