@@ -1,102 +1,169 @@
 <?php
-    session_start();
+session_start();
 
-    include_once('database.php');
+include_once('database.php');
 
-    if(!isset($_SESSION['email']) || !isset($_SESSION['senha']) || $_SESSION['T_userType_id_userType'] !== "2") {
-        unset($_SESSION['email']);
-        unset($_SESSION['senha']);
-        unset($_SESSION['T_userType_id_userType']);
-        session_regenerate_id(true);
-        header('Location: login.php');
-        exit();
-    }
 
-    $email = $_SESSION['email'];
-    $sql = "SELECT * FROM t_usuario WHERE email = '$email'";
-    $result = mysqli_query($conexao, $sql);
-    $row = mysqli_fetch_assoc($result);
-    $cpf = $row['cpf'];
-    $nome = $row['nome'];
+if (!isset($_SESSION['email']) || !isset($_SESSION['senha']) || $_SESSION['T_userType_id_userType'] !== "2") {
+    unset($_SESSION['email']);
+    unset($_SESSION['senha']);
+    unset($_SESSION['T_userType_id_userType']);
+    session_regenerate_id(true);
+    header('Location: login.php');
+    exit();
+}
 
-    $sql = "SELECT t_reserva.*, t_laboratorio.nome_laboratorio AS nome_laboratorio FROM t_reserva
+$theme = isset($_SESSION['theme']) ? $_SESSION['theme'] : 'light';
+$icon = isset($_SESSION['icon']) ? $_SESSION['icon'] : 'sun-fill';
+$themeClass = ($theme === 'dark') ? 'dark-theme' : 'light-theme';
+
+$email = $_SESSION['email'];
+$sql = "SELECT * FROM t_usuario WHERE email = '$email'";
+$result = mysqli_query($conexao, $sql);
+$row = mysqli_fetch_assoc($result);
+$cpf = $row['cpf'];
+
+$sql = "SELECT t_reserva.*, t_laboratorio.nome_laboratorio AS nome_laboratorio FROM t_reserva
         INNER JOIN t_laboratorio ON t_reserva.t_laboratorio_id_laboratorio = t_laboratorio.id_laboratorio
         WHERE t_reserva.t_usuario_cpf = '$cpf'
         ORDER BY t_reserva.horario_de_entrega DESC";
+$result = mysqli_query($conexao, $sql);
+
+if (isset($_POST['cancelar'])) {
+    $reservaId = intval($_POST['reservaId']);
+
+    $sql = "DELETE FROM t_reserva WHERE id_reserva = '$reservaId'";
     $result = mysqli_query($conexao, $sql);
+
+    if ($result) {
+        header('Location: historicoReservaProfessor.php');
+        exit();
+    } else {
+        $messageClass = "alert-danger";
+        $message = "Ocorreu um erro ao cancelar a reserva. Tente novamente.";
+    }
+}
 ?>
 
 <!DOCTYPE html>
-<html lang="pt-br" >
+<html lang="pt-br" data-bs-theme="<?php echo $theme; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema do Secretário</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Sistema do Professor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
+    <script src="script.js"></script>
 </head>
 <body>
-    <header class="navbar navbar-dark bg-primary">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarCollapse" aria-controls="sidebarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+    <svg xmlns="http://www.w3.org/2000/svg" style="display: none;">
+        <symbol id="check2-circle" viewBox="0 0 16 16">
+            <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"></path>
+            <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"></path>
+        </symbol>
+        <symbol id="moon-stars-fill" viewBox="0 0 16 16">
+            <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"></path>
+            <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.734 1.734 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.734 1.734 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.734 1.734 0 0 0 1.097-1.097l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z"></path>
+        </symbol>
+        <symbol id="sun-fill" viewBox="0 0 16 16">
+            <path d="M8 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"></path>
+        </symbol>
+    </svg>
+    <div class="dropdown position-fixed bottom-0 end-0 mb-3 me-3 bd-mode-toggle">
+        <button class="btn btn-primary py-2 dropdown-toggle d-flex align-items-center" id="bd-theme" type="button" onclick="toggleTheme()">
+            <svg class="bi my-0 theme-icon-active" width="1em" height="1em"><use href="#<?php echo $icon; ?>"></use></svg>
+            <span class="visually-hidden" id="bd-theme-text">Toggle theme to light</span>
+        </button>
+    </div>
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Eighth navbar example">
+        <div class="container">
+        <a class="navbar-brand" href="#">Professor</a>
+        <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07" aria-controls="navbarsExample07" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <button class="navbar-toggler logout-btn" type="button" onclick="window.location.href = 'sair.php'">
-            Sair
-        </button>
-    </header>
-    <main class="d-flex flex-nowrap">
-    <div class="d-flex flex-column flex-shrink-0 p-3 text-bg-dark sidebar" id="sidebarCollapse">
-        <ul class="nav nav-pills flex-column mb-auto justify-content-center">
-            <li class="nav-item"><a href="sistemaProfessor.php" class="nav-link text-white">Menu</a></li>
-            <li><a href="cadastroReserva.php" class="nav-link text-white">Reservar</a></li>
-            <li><a href="historicoReservaProfessor.php" class="nav-link active" aria-current="page">Histórico</a></li>
-        </ul>
-    </div>
-    <div class="content d-flex flex-column align-items-center justify-content-center">
-        <div class="p-5 bg-white rounded shadow-lg">
-            <?php if (mysqli_num_rows($result) > 0) : ?>
-                <table class="table table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th>Laboratório</th>
-                            <th>Usuário</th>
-                            <th>Reserva</th>
-                            <th>Entrega</th>
-                            <th>Ação</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                            <?php while ($row = mysqli_fetch_assoc($result)) : ?>
-                                <?php date_default_timezone_set('America/Sao_Paulo'); ?>
-                                    <tr>
-                                    <td><?php echo $row['nome_laboratorio']; ?></td>
-                                    <td><?php echo $nome; ?></td>
-                                    <td><?php echo $row['horario_de_reserva']; ?></td>
-                                    <td><?php echo $row['horario_de_entrega']; ?></td>
-                                    <td>
-                                        <?php if ($row['horario_de_entrega'] < date('Y-m-d H:i:s')) : ?>
-                                            <button type="button" class="btn btn-success" disabled>Concluído</button>
-                                        <?php else : ?>
-                                            <button type="button" class="btn btn-secondary" disabled>Pendente</button>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                            <?php endwhile; ?>
-                        </tbody>
-                    </table>
-                <?php else : ?>
-                    <p>Nenhum dado disponível.</p>
-                <?php endif; ?>
-            </div>
+
+        <div class="navbar-collapse collapse" id="navbarsExample07">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" href="sistemaProfessor.php">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="cadastroReserva.php">Cadastro</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" aria-current="page" href="historicoReservaProfessor.php">Histórico</a>
+                </li>
+                <li class="nav-item ml-auto">
+                    <a class="nav-link" href="sair.php">Sair</a>
+                </li>
+            </ul>
         </div>
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        document.querySelector('.navbar-toggler').addEventListener('click', function() {
-            document.getElementById('sidebarCollapse').classList.toggle('hidden');
-        });
-    </script>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="h2">Histórico de Reservas</h1> <hr>
+        <div class="table-responsive small">
+            <?php if (mysqli_num_rows($result) > 0) : ?>
+                <table class="table table-striped table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">Laboratório</th>
+                        <th scope="col">Reserva</th>
+                        <th scope="col">Entrega</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = mysqli_fetch_assoc($result)) : ?>
+                            <?php date_default_timezone_set('America/Sao_Paulo'); ?>
+                            <tr>
+                                <td><?php echo $row['nome_laboratorio']; ?></td>
+                                <td><?php echo $row['horario_de_reserva']; ?></td>
+                                <td><?php echo $row['horario_de_entrega']; ?></td>
+                                <?php if ($row['horario_de_entrega'] < date('Y-m-d H:i:s')) : ?>
+                                    <td><button class="btn btn-success">Entregue</button></td>
+                                    <td><button class="btn btn-secondary">Indisponível</button></td>
+                                <?php else : ?>
+                                    <td><button type="button" class="btn btn-warning me-2" disabled>Pendente</button></td>
+                                    <td>
+                                        <form action="historicoReservaProfessor.php" method="POST">
+                                            <input type="hidden" name="reservaId" value="<?php echo $row['idT_reserva']; ?>">
+                                            <button type="submit" name="cancelar" class="btn btn-danger" onclick="return confirm('Tem certeza que deseja cancelar esta reserva?')">Cancelar</button>
+                                        </form>
+                                    </td>
+                                <?php endif; ?>
+                            </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            <?php else : ?>
+                <table class="table table-striped table-sm">
+                    <thead>
+                    <tr>
+                        <th scope="col">Laboratório</th>
+                        <th scope="col">Reserva</th>
+                        <th scope="col">Entrega</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td> </td>
+                            <td> </td>
+                            <td> </td>
+                            <td> </td>
+                            <td> </td>
+                        </tr>
+                    </tbody>
+                </table>
+            <?php endif; ?>
+        </div>
+    </div>
+    <script src="./node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-
-
